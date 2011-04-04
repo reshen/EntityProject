@@ -10,10 +10,26 @@ import entitysystem.Component;
  * c.f. http://entity-systems.wikidot.com/rdbms-with-code-in-systems
  */
 public class Position implements Component {
-    public float x, y;
+    public float x, y, z, scale, rotation;
+
+    public Position() {
+        this(0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    }
+
+    public Position(final float x, final float y) {
+        this(x, y, 0.0f, 1.0f, 0.0f);
+    }
+
+    public Position(final float x, final float y, final float z, final float scale, final float rotation) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.scale = scale;
+        this.rotation = rotation;
+    }
 
     @Override
     public String toString() {
-        return "(" + x + "," + y + ")";
+        return "(" + x + "," + y + "," + z + " : " + scale + ", " + rotation + ")";
     }
 }

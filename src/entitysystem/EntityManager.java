@@ -29,6 +29,7 @@ public class EntityManager {
     public EntityManager() {
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Component> void addComponent(final UUID entity, final T component) {
         HashMap<UUID, ? extends Component> store = componentStores.get(component.getClass());
 
@@ -37,7 +38,6 @@ public class EntityManager {
             componentStores.put(component.getClass(), store);
         }
 
-        /* TODO: Check cast. */
         ((HashMap<UUID, T>) store).put(entity, component);
     }
 
@@ -47,6 +47,7 @@ public class EntityManager {
         return uuid;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T extends Component> List<T> getAllComponentsOfType(final Class<T> componentType) {
         final HashMap<UUID, ? extends Component> store = componentStores.get(componentType);
 
@@ -54,7 +55,6 @@ public class EntityManager {
             return new LinkedList<T>();
         }
 
-        /* TODO: Check cast. */
         return new LinkedList(store.values());
     }
 
@@ -68,6 +68,7 @@ public class EntityManager {
         return store.keySet();
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Component> T getComponent(final UUID entity, final Class<T> componentType) {
         final HashMap<UUID, ? extends Component> store = componentStores.get(componentType);
 
@@ -75,7 +76,6 @@ public class EntityManager {
             throw new IllegalArgumentException("GET FAIL: there are no entities with a Component of class: " + componentType);
         }
 
-        /* TODO: Check cast. */
         final T result = (T) store.get(entity);
         if (result == null) {
             throw new IllegalArgumentException("GET FAIL: " + entity + " does not possess Component of class\n   missing: " + componentType);
@@ -85,21 +85,11 @@ public class EntityManager {
     }
 
     public void killEntity(final UUID entity) {
-        /*
-         * FIXME: Think about this and revise.
-         * - It's inefficient to lock down the entire EM object when what is likely needed is
-         * synchronized(allEntities).
-         * - I highly doubt this object is multithreaded safe anyhow, as there are places where
-         * allEntities is modified that are not locked down: createEntity()
-         */
-        synchronized (this) // prevent it generating two entities with same ID at once
-        {
-            /* Invalid kills are likely indicative of a coding error elsewhere. */
-            assert allEntities.contains(entity);
+        /* Invalid kills are likely indicative of a coding error elsewhere. */
+        assert allEntities.contains(entity);
 
-            allEntities.remove(entity);
-            removeAllComponentsForEntity(entity);
-        }
+        allEntities.remove(entity);
+        removeAllComponentsForEntity(entity);
     }
 
     /*

@@ -74,7 +74,7 @@ public class EntityManager {
             return new LinkedList<T>();
         }
 
-        return (List<T>) store.values();
+        return new LinkedList(store.values());
     }
 
     public <T extends Component> Set<Integer> getAllEntitiesPossessingComponent(final Class<T> componentType) {

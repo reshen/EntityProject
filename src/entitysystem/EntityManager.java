@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Standard design: c.f. http://entity-systems.wikidot.com/rdbms-with-code-in-systems
@@ -14,86 +16,66 @@ import java.util.Set;
  */
 
 public class EntityManager {
-    List<Integer> allEntities;
-    HashMap<Class, HashMap<Integer, ? extends Component>> componentStores;
-    int lowestUnassignedEntityID = 1;
+
+    /* Set of all entities which are alive */
+    HashSet<UUID> allEntities = new HashSet<UUID>();
+
+    /*
+     * Maps a type of component -> (Entity Identifier, Component of type requested).
+     * For example, Position.class -> ( Foo, Foo's Position )
+     */
+    HashMap<Class<? extends Component>, HashMap<UUID, ? extends Component>> componentStores = new HashMap<Class<? extends Component>, HashMap<UUID, ? extends Component>>();
 
     public EntityManager() {
-        allEntities = new LinkedList<Integer>();
-        componentStores = new HashMap<Class, HashMap<Integer, ? extends Component>>();
     }
 
-    public <T extends Component> void addComponent(final int entity, final T component) {
-        HashMap<Integer, ? extends Component> store = componentStores.get(component.getClass());
+    public <T extends Component> void addComponent(final UUID entity, final T component) {
+        HashMap<UUID, ? extends Component> store = componentStores.get(component.getClass());
 
         if (store == null) {
-            store = new HashMap<Integer, T>();
+            store = new HashMap<UUID, T>();
             componentStores.put(component.getClass(), store);
         }
 
-        ((HashMap<Integer, T>) store).put(entity, component);
+        /* TODO: Check cast. */
+        ((HashMap<UUID, T>) store).put(entity, component);
     }
 
-    public int createEntity() {
-
-        final int newID = generateNewEntityID();
-
-        if (newID < 1) {
-            /**
-             * Fatal error...
-             */
-            return 0;
-        } else {
-            allEntities.add(newID);
-
-            return newID;
-        }
-    }
-
-    public int generateNewEntityID() {
-        synchronized (this) // prevent it generating two entities with same ID at once
-        {
-            if (lowestUnassignedEntityID < Integer.MAX_VALUE) {
-                return lowestUnassignedEntityID++;
-            } else {
-                for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                    if (!allEntities.contains(i)) {
-                        return i;
-                    }
-                }
-
-                throw new Error("ERROR: no available Entity IDs; too many entities!");
-            }
-        }
+    public UUID createEntity() {
+        final UUID uuid = UUID.randomUUID();
+        allEntities.add(uuid);
+        return uuid;
     }
 
     public <T extends Component> List<T> getAllComponentsOfType(final Class<T> componentType) {
-        final HashMap<Integer, ? extends Component> store = componentStores.get(componentType);
+        final HashMap<UUID, ? extends Component> store = componentStores.get(componentType);
 
         if (store == null) {
             return new LinkedList<T>();
         }
 
+        /* TODO: Check cast. */
         return new LinkedList(store.values());
     }
 
-    public <T extends Component> Set<Integer> getAllEntitiesPossessingComponent(final Class<T> componentType) {
-        final HashMap<Integer, ? extends Component> store = componentStores.get(componentType);
+    public <T extends Component> Set<UUID> getAllEntitiesPossessingComponent(final Class<T> componentType) {
+        final HashMap<UUID, ? extends Component> store = componentStores.get(componentType);
 
         if (store == null) {
-            return new HashSet<Integer>();
+            return new HashSet<UUID>();
         }
 
         return store.keySet();
     }
 
-    public <T extends Component> T getComponent(final int entity, final Class<T> componentType) {
-        final HashMap<Integer, ? extends Component> store = componentStores.get(componentType);
+    public <T extends Component> T getComponent(final UUID entity, final Class<T> componentType) {
+        final HashMap<UUID, ? extends Component> store = componentStores.get(componentType);
 
         if (store == null) {
             throw new IllegalArgumentException("GET FAIL: there are no entities with a Component of class: " + componentType);
         }
 
+        /* TODO: Check cast. */
         final T result = (T) store.get(entity);
         if (result == null) {
             throw new IllegalArgumentException("GET FAIL: " + entity + " does not possess Component of class\n   missing: " + componentType);
@@ -102,10 +84,41 @@ public class EntityManager {
         return result;
     }
 
-    public void killEntity(final int entity) {
+    public void killEntity(final UUID entity) {
+        /*
+         * FIXME: Think about this and revise.
+         * - It's inefficient to lock down the entire EM object when what is likely needed is
+         * synchronized(allEntities).
+         * - I highly doubt this object is multithreaded safe anyhow, as there are places where
+         * allEntities is modified that are not locked down: createEntity()
+         */
         synchronized (this) // prevent it generating two entities with same ID at once
         {
+            /* Invalid kills are likely indicative of a coding error elsewhere. */
+            assert allEntities.contains(entity);
+
             allEntities.remove(entity);
+            removeAllComponentsForEntity(entity);
         }
+    }
+
+    /*
+     * Beware, this a very expensive operation - O(n) for component types, and O(n) for
+     * alive components.
+     */
+    public void removeAllComponentsForEntity(final UUID entity) {
+
+        final HashSet<Entry<UUID, ? extends Component>> forRemoval = new HashSet<Entry<UUID, ? extends Component>>();
+
+        for (final Entry<Class<? extends Component>, HashMap<UUID, ? extends Component>> componentTypeEntry : componentStores.entrySet()) {
+            for (final Entry<UUID, ? extends Component> component : componentTypeEntry.getValue().entrySet()) {
+                if (component.getKey() == entity) {
+                    forRemoval.add(component);
+                }
+            }
+            componentTypeEntry.getValue().entrySet().removeAll(forRemoval);
+            forRemoval.clear();
+        }
+
     }
 }

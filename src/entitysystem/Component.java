@@ -1,4 +1,4 @@
-package com.wikidot.entitysystems.rdbmswithcodeinsystems;
+package entitysystem;
 
 /**
  * Standard design: c.f. http://entity-systems.wikidot.com/rdbms-with-code-in-systems
@@ -7,7 +7,5 @@ package com.wikidot.entitysystems.rdbmswithcodeinsystems;
  * of each subclass instead. This is safer.
  */
 
-public interface Component
-{
-	
+public interface Component {
 }

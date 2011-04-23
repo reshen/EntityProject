@@ -31,14 +31,14 @@ public class EntityManager {
 
     @SuppressWarnings("unchecked")
     public <T extends Component> void addComponent(final UUID entity, final T component) {
-        HashMap<UUID, ? extends Component> store = componentStores.get(component.getClass());
+        HashMap<UUID, T> store = (HashMap<UUID, T>) componentStores.get(component.getClass());
 
         if (store == null) {
             store = new HashMap<UUID, T>();
             componentStores.put(component.getClass(), store);
         }
 
-        ((HashMap<UUID, T>) store).put(entity, component);
+        store.put(entity, component);
     }
 
     public UUID createEntity() {

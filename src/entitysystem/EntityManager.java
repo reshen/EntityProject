@@ -47,15 +47,10 @@ public class EntityManager {
         return uuid;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T extends Component> List<T> getAllComponentsOfType(final Class<T> componentType) {
-        final HashMap<UUID, ? extends Component> store = componentStores.get(componentType);
-
-        if (store == null) {
-            return new LinkedList<T>();
-        }
-
-        return new LinkedList(store.values());
+    @SuppressWarnings({ "unchecked" })
+    public <T extends Component> Set<Entry<UUID, T>> getAllComponentsOfType(final Class<T> componentType) {
+        final HashMap<UUID, T> store = (HashMap<UUID, T>) componentStores.get(componentType);
+        return store == null ? null : store.entrySet();
     }
 
     public <T extends Component> Set<UUID> getAllEntitiesPossessingComponent(final Class<T> componentType) {

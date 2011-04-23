@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,20 +45,24 @@ public class EntityManagerTest {
 
     @Test
     public void testGetAllComponentsOfType() {
-        final List<Position> emptyList = em.getAllComponentsOfType(Position.class);
-        assert emptyList.size() == 0;
+        final Set<Map.Entry<UUID, Position>> emptySet = em.getAllComponentsOfType(Position.class);
+        assert emptySet == null;
 
         final Position p = new Position();
         p.x = 5;
         p.y = 10;
+        p.z = 15;
 
         final UUID entity1 = em.createEntity();
         em.addComponent(entity1, p);
 
-        final List<Position> posList = em.getAllComponentsOfType(Position.class);
-        assert posList.size() == 1;
-        assert posList.get(0).x == 5;
-        assert posList.get(0).y == 10;
+        final Set<Map.Entry<UUID, Position>> posSet = em.getAllComponentsOfType(Position.class);
+        assert posSet.size() == 1;
+        for (final Map.Entry<UUID, Position> pos : posSet) {
+            assert pos.getValue().x == 5;
+            assert pos.getValue().y == 10;
+            assert pos.getValue().z == 15;
+        }
         assert em.getComponent(entity1, Position.class).x == 5;
         assert em.getComponent(entity1, Position.class).y == 10;
     }

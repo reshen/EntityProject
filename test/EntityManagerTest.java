@@ -100,6 +100,13 @@ public class EntityManagerTest {
 
     @Test(expected = AssertionError.class)
     public void testInvalidKillEntity() {
+        /*
+         * This unit test requires that the JVM has assertions enabled. 
+         * NOTE: To enable (make active) assert statements, you must set a flag
+         * to the compiler. Go to Run -> Run... -> Arguments, and in the box
+         * labeled VM arguments:, enter either -enableassertions or just -ea.
+         * Accept the changes and close the dialog.
+         */
         em.killEntity(null);
     }
 

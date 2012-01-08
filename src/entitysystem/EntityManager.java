@@ -2,8 +2,6 @@ package entitysystem;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
@@ -26,7 +24,22 @@ public class EntityManager {
      */
     HashMap<Class<? extends Component>, HashMap<UUID, ? extends Component>> componentStores = new HashMap<Class<? extends Component>, HashMap<UUID, ? extends Component>>();
 
-    public EntityManager() {
+    private static EntityManager em_ = null;
+    
+    public static EntityManager getInstance() {
+        if (em_ == null) {
+            em_ = new EntityManager();
+        }
+        
+        return em_;
+    }
+    
+    public void reset() {
+        allEntities.clear();
+        componentStores.clear();
+    }
+    
+    private EntityManager() {
     }
 
     @SuppressWarnings("unchecked")

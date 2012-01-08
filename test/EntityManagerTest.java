@@ -1,4 +1,3 @@
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -16,11 +15,12 @@ public class EntityManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        em = new EntityManager();
+        em = EntityManager.getInstance();
     }
 
     @After
     public void tearDown() throws Exception {
+        em.reset();
     }
 
     @Test
